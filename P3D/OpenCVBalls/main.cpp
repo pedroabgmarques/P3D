@@ -6,6 +6,8 @@
 #include <opencv2/objdetect/objdetect.hpp>
 #include "Dependencies\glew\glew.h"
 #include "Dependencies\freeglut\freeglut.h"
+#include "Dependencies\aruco\aruco.h"
+#include "Dependencies\aruco\cvdrawingutils.h"
 #include <math.h>
 #include "tga.h"
 #include "VideoFaceDetector.h"
@@ -14,6 +16,7 @@
 
 using namespace cv;
 using namespace std;
+using namespace aruco;
 
 Mat frameOriginal, frameHSV, frameFiltered, frameFlipped, fgMaskMOG, controlFlipped, tempimage, tempimage2, faceDetection;
 
@@ -42,7 +45,7 @@ int circleRadius = 2;
 int myDL;
 
 //Modos existentes: position tracking e augmented reality
-int demoModes = 3;
+int demoModes = 4;
 //Modo current
 int demoMode = 1;
 
@@ -68,6 +71,12 @@ float accumulatorX = 0, accumulatorY = 0, accumulatorZ = 0;
 //https://github.com/mc-jesus/face_detect_n_track
 Rect faceRectangle;
 Point facePosition;
+
+//Usado para implementar o marker detection (biblioteca Aruco)
+MarkerDetector MDetector;
+vector<Marker> Markers;
+CameraParameters CamParam;
+
 
 void load_tga_image(std::string nome, GLuint texture, bool transparency)
 {
@@ -547,6 +556,8 @@ void display()
 	switch (demoMode)
 	{
 	case 0:
+		//MODO POSITIONAL TRACKING
+
 		glDisable(GL_TEXTURE_2D);
 
 		//set projection matrix using intrinsic camera params
@@ -588,6 +599,7 @@ void display()
 		glPopMatrix();
 		break;
 	case 1:
+		//MODO AUGMENTED REALITY PLANETA
 
 		glClear(GL_COLOR_BUFFER_BIT);
 
@@ -675,6 +687,8 @@ void display()
 
 		break;
 	case 2:{
+		//MODO FACE DETECTION
+
 		glClear(GL_COLOR_BUFFER_BIT);
 
 		glDisable(GL_TEXTURE_2D);
@@ -718,7 +732,7 @@ void display()
 		Point facePos = detector.facePosition();
 
 		//Escrever valores
-		cout << face.width << endl;
+		//cout << face.width << endl;
 
 		float scale = RangeAToRangeB((float)face.width, 80.0, 480.0, 0.35, 1.4, 1.0);
 
@@ -757,6 +771,31 @@ void display()
 			glVertex3f(-1.0f, 1.0f, 0.0f);
 		glEnd();
 		glPopMatrix();
+
+		break;
+	}
+	case 3:{
+		//MODO MARKER DETECTION
+
+		glClear(GL_COLOR_BUFFER_BIT);
+
+		glDisable(GL_TEXTURE_2D);
+
+		flip(frameOriginal, tempimage, 0);
+		flip(tempimage, tempimage2, 1);
+
+		MDetector.detect(tempimage2, Markers, CamParam, 0.05);
+
+		//for each marker, draw info and its boundaries in the image
+		for (unsigned int i = 0; i<Markers.size(); i++) {
+			//cout << Markers[i] << endl;
+			Markers[i].draw(tempimage2, Scalar(0, 0, 255), 2);
+			CvDrawingUtils::draw3dCube(tempimage2, Markers[i], CamParam);
+		}
+
+		glDrawPixels(tempimage2.size().width, tempimage2.size().height, GL_BGR, GL_UNSIGNED_BYTE, tempimage2.ptr());
+
+		
 
 		break;
 	}
@@ -821,6 +860,8 @@ void idle()
 	else{
 		frameCapturedSuccessfully = cap.read(frameOriginal);
 	}
+
+	CamParam.resize(frameOriginal.size());
 	
 }
 
@@ -866,6 +907,15 @@ int main(int argc, char** argv)
 	load_tga_image("mrt", faceDetectionTextures[1], true);
 	load_tga_image("lion", faceDetectionTextures[2], true);
 	load_tga_image("hitler", faceDetectionTextures[3], true);
+
+	//Read camera calibration files
+	try{
+		CamParam.readFromXMLFile("camera.xml");
+	}
+	catch (std::exception &ex){
+		cout << "Exception: " << ex.what() << endl;
+	}
+	
 
 
 	// set up GUI callback functions
