@@ -555,7 +555,7 @@ float RangeAToRangeB(float input, float input_start, float input_end, float outp
 	return (output_start + slope * (input - input_start)) / divisor;
 }
 
-void glRenderString(float x, float y, void *font, char str[])
+void glRenderString(float x, float y, char str[])
 {
 	glDisable(GL_LIGHTING);
 	glColor3f(1.0, 1.0, 1.0);
@@ -564,11 +564,11 @@ void glRenderString(float x, float y, void *font, char str[])
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 	
-	glTranslatef(- 55, 52, (float)-glutStrokeWidth(GLUT_STROKE_ROMAN, str[0]));
+	glTranslatef(-30, 28 - y, (float)-glutStrokeWidth(GLUT_STROKE_MONO_ROMAN, str[0])/2);
 
 	glColor3f(1.0f, 1.0f, 1.0f);
-	glScalef(0.025, 0.025, 0.025);
-	for (int i = 0; i < strlen(str); i++)glutStrokeCharacter(GLUT_STROKE_ROMAN, str[i]);
+	glScalef(0.012, 0.012, 0.012);
+	for (int i = 0; i < strlen(str); i++)glutStrokeCharacter(GLUT_STROKE_MONO_ROMAN, str[i]);
 
 	glPopMatrix();
 
@@ -662,7 +662,11 @@ void display()
 
 		glPopMatrix();
 
-		glRenderString(0.0f, 0.0f, GLUT_BITMAP_TIMES_ROMAN_24, "Modo 1 - Positional Tracking");
+		glRenderString(0.0f, 0.0f, "Modo 1 - Positional Tracking");
+		glRenderString(0.0f, 2.0f, "Use um objeto vermelho");
+		glRenderString(0.0f, 4.0f, "(de preferencia uma esfera).");
+		glRenderString(0.0f, 6.0f, "Pode configurar a cor a detetar");
+		glRenderString(0.0f, 8.0f, "com os sliders da janela Controlo");
 
 		break;
 	case 1:
@@ -678,6 +682,8 @@ void display()
 		flip(frameOriginal, tempimage, 0);
 		flip(tempimage, tempimage2, 1);
 		putText(tempimage2, "Modo 2 - Augmented Reality", cvPoint(10, height - 20), CV_FONT_HERSHEY_SIMPLEX, 0.5, Scalar(255, 255, 255), 1, 8, true);
+		putText(tempimage2, "Utilize um objeto vermelho (de preferencia uma esfera).", cvPoint(10, height - 40), CV_FONT_HERSHEY_SIMPLEX, 0.5, Scalar(255, 255, 255), 1, 8, true);
+		putText(tempimage2, "Pode alterar a cor a detetar com os sliders da janela Controlo", cvPoint(10, height - 60), CV_FONT_HERSHEY_SIMPLEX, 0.5, Scalar(255, 255, 255), 1, 8, true);
 		glDrawPixels(tempimage2.size().width, tempimage2.size().height, GL_BGR, GL_UNSIGNED_BYTE, tempimage2.ptr());
 
 		glClear(GL_DEPTH_BUFFER_BIT);
