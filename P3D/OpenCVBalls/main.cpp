@@ -48,8 +48,8 @@ int myDL;
 
 //Modos existentes: position tracking e augmented reality
 int demoModes = 4;
-//Modo current
-int demoMode = 1;
+//Modo corrente
+int demoMode = 0;
 
 tgaInfo *im;
 GLuint textureEarth, textureMoon;
@@ -555,6 +555,26 @@ float RangeAToRangeB(float input, float input_start, float input_end, float outp
 	return (output_start + slope * (input - input_start)) / divisor;
 }
 
+void glRenderString(float x, float y, void *font, char str[])
+{
+	glDisable(GL_LIGHTING);
+	glColor3f(1.0, 1.0, 1.0);
+
+	glPushMatrix();
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+	
+	glTranslatef(- 55, 52, (float)-glutStrokeWidth(GLUT_STROKE_ROMAN, str[0]));
+
+	glColor3f(1.0f, 1.0f, 1.0f);
+	glScalef(0.025, 0.025, 0.025);
+	for (int i = 0; i < strlen(str); i++)glutStrokeCharacter(GLUT_STROKE_ROMAN, str[i]);
+
+	glPopMatrix();
+
+	glEnable(GL_LIGHTING);
+}
+
 void display()
 {
 	// clear the window
@@ -641,6 +661,9 @@ void display()
 		glutSolidTeacup(0.5);
 
 		glPopMatrix();
+
+		glRenderString(0.0f, 0.0f, GLUT_BITMAP_TIMES_ROMAN_24, "Modo 1 - Positional Tracking");
+
 		break;
 	case 1:
 		//MODO AUGMENTED REALITY PLANETA
@@ -649,8 +672,12 @@ void display()
 
 		glDisable(GL_TEXTURE_2D);
 
+		glMatrixMode(GL_MODELVIEW);
+		glLoadIdentity();
+
 		flip(frameOriginal, tempimage, 0);
 		flip(tempimage, tempimage2, 1);
+		putText(tempimage2, "Modo 2 - Augmented Reality", cvPoint(10, height - 20), CV_FONT_HERSHEY_SIMPLEX, 0.5, Scalar(255, 255, 255), 1, 8, true);
 		glDrawPixels(tempimage2.size().width, tempimage2.size().height, GL_BGR, GL_UNSIGNED_BYTE, tempimage2.ptr());
 
 		glClear(GL_DEPTH_BUFFER_BIT);
@@ -744,9 +771,14 @@ void display()
 		/*cv::rectangle(frameOriginal, detector.face(), cv::Scalar(255, 0, 0));
 		cv::circle(frameOriginal, detector.facePosition(), 30, cv::Scalar(0, 255, 0));*/
 
+		glMatrixMode(GL_MODELVIEW);
+		glLoadIdentity();
+
 		////Desenha o resultado da deteção
 		flip(frameOriginal, tempimage, 0);
 		flip(tempimage, tempimage2, 1);
+		putText(tempimage2, "Modo 3 - Face Detection", cvPoint(10, height - 20), CV_FONT_HERSHEY_SIMPLEX, 0.5, Scalar(255, 255, 255), 1, 8, true);
+		putText(tempimage2, "Tecla N para alterar a textura", cvPoint(10, height - 40), CV_FONT_HERSHEY_SIMPLEX, 0.5, Scalar(255, 255, 255), 1, 8, true);
 		glDrawPixels(tempimage2.size().width, tempimage2.size().height, GL_BGR, GL_UNSIGNED_BYTE, tempimage2.ptr());
 
 		glClear(GL_DEPTH_BUFFER_BIT);
@@ -843,6 +875,8 @@ void display()
 		MDetector.detect(undistorted, Markers, CamParam, 0.045);
 		//Desenhar imagem da camara
 		
+		putText(undistorted, "Modo 4 - Marker Detection", cvPoint(10, height - 20), CV_FONT_HERSHEY_SIMPLEX, 0.5, Scalar(255, 255, 255), 1, 8, true);
+		putText(undistorted, "Tecla N para alterar o modelo 3D", cvPoint(10, height - 40), CV_FONT_HERSHEY_SIMPLEX, 0.5, Scalar(255, 255, 255), 1, 8, true);
 		glDrawPixels(undistorted.size().width, undistorted.size().height, GL_BGR, GL_UNSIGNED_BYTE, undistorted.ptr());
 		glClear(GL_DEPTH_BUFFER_BIT);
 
@@ -959,37 +993,6 @@ void idle()
 	CamParam.resize(frameOriginal.size());
 	
 }
-void cvAddText()
-{
-	//tenho de ver isto amanha 
-	//fui ver isto aki http://www.cs.iit.edu/~agam/cs512/lect-notes/opencv-intro/opencv-intro.html#SECTION00052000000000000000
-	CvFont font;
-	double hScale = 1.0;
-	double vScale = 1.0;
-	int    lineWidth = 1;
-	cvInitFont(&font, CV_FONT_HERSHEY_SIMPLEX | CV_FONT_ITALIC, hScale, vScale, 0, lineWidth);
-
-	Mat img = imread("mete se aki alguma coisa", CV_LOAD_IMAGE_UNCHANGED);
-
-	/*tou na duvida no qe tenho de meter no img*/
-	cvPutText(imread, "Texto exemplo", cvPoint(200, 400), &font, cvScalar(255, 255, 0));
-
-	/*outras fontes CV_FONT_HERSHEY_SIMPLEX, CV_FONT_HERSHEY_PLAIN,
-CV_FONT_HERSHEY_DUPLEX, CV_FONT_HERSHEY_COMPLEX,
-CV_FONT_HERSHEY_TRIPLEX, CV_FONT_HERSHEY_COMPLEX_SMALL,
-CV_FONT_HERSHEY_SCRIPT_SIMPLEX, CV_FONT_HERSHEY_SCRIPT_COMPLEX,*/
-}
-
-/*isto era outro metodo
-void ApresentarTexto(Mat image, char* window_name, RNG rng)
-{
-	Size textsize = getTextSize("OpenCV forever!", CV_FONT_HERSHEY_COMPLEX, 3, 5, 0);
-	Point org((width - textsize.width) / 2, (height - textsize.height) / 2);
-	int lineType = 8;
-
-	
-	
-}*/
 
 int main(int argc, char** argv)
 {
