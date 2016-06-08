@@ -360,10 +360,17 @@ void initLights(void)
 
 void applylights(void)
 {
+<<<<<<< HEAD
 	// Define a posição de light0
 	GLfloat light0_position[] = { -1.0f, -3.0f, 0.0f, 1.0f };
 	// Define a posição de direcção de light1
 	GLfloat spot_position[] = { 0.0f, 3.0f, -1.0f, 1.0f };
+=======
+	// Define a posiÃ§Ã£o de light0
+	GLfloat light0_position[] = { 0.0f, 3.0f, 0.0f, 1.0f };
+	// Define a posiÃ§Ã£o de direcÃ§Ã£o de light1
+	GLfloat spot_position[] = { 0.0f, 3.0f, -5.0f, 1.0f };
+>>>>>>> 7f960aad21f1cbe3818adc3d5c3eade45e170344
 	GLfloat spot_direction[] = { 0.0f, -1.0f, 0.0f };
 
 	// Aplica a light0
