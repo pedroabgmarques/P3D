@@ -18,7 +18,7 @@ using namespace cv;
 using namespace std;
 using namespace aruco;
 
-Mat frameOriginal, frameHSV, frameFiltered, frameFlipped, fgMaskMOG, controlFlipped, tempimage, tempimage2, faceDetection;
+Mat frameOriginal, frameHSV, frameFiltered, frameFlipped, fgMaskMOG, controlFlipped, tempimage, tempimage2, faceDetection, undistorted;
 
 Ptr<BackgroundSubtractor> pMOG; //MOG Background subtractor
 
@@ -36,8 +36,9 @@ VideoCapture cap(CV_CAP_ANY); //capture the video from web cam
 char *classifierFaces = "haarcascade_frontalface_default.xml";
 char *classifierEyes = "haarcascade_mcs_eyepair_big.xml";
 VideoFaceDetector detector(classifierFaces, cap);
-int width = 640;
-int height = 480;
+int width = cap.get(CV_CAP_PROP_FRAME_WIDTH);
+int height = cap.get(CV_CAP_PROP_FRAME_HEIGHT);
+Size GlWindowSize = Size(width, height);
 
 Point circleCenter = Point(0, 0);
 int circleRadius = 2;
@@ -76,7 +77,6 @@ Point facePosition;
 MarkerDetector MDetector;
 vector<Marker> Markers;
 CameraParameters CamParam;
-
 
 void load_tga_image(std::string nome, GLuint texture, bool transparency)
 {
@@ -777,25 +777,71 @@ void display()
 	case 3:{
 		//MODO MARKER DETECTION
 
-		glClear(GL_COLOR_BUFFER_BIT);
-
 		glDisable(GL_TEXTURE_2D);
+
+		glMatrixMode(GL_PROJECTION);
+		glLoadIdentity();
+		glOrtho((float)width / (float)height, (float)-width / (float)height, -1, 1, -100, 100);
+
+		glMatrixMode(GL_MODELVIEW);
+		glLoadIdentity();
+
+		/*glPixelZoom(-1, -1);
+		glRasterPos2f(-1.3, 1);*/
 
 		flip(frameOriginal, tempimage, 0);
 		flip(tempimage, tempimage2, 1);
 
-		MDetector.detect(tempimage2, Markers, CamParam, 0.05);
-
-		//for each marker, draw info and its boundaries in the image
-		for (unsigned int i = 0; i<Markers.size(); i++) {
-			//cout << Markers[i] << endl;
-			Markers[i].draw(tempimage2, Scalar(0, 0, 255), 2);
-			CvDrawingUtils::draw3dCube(tempimage2, Markers[i], CamParam);
-		}
-
-		glDrawPixels(tempimage2.size().width, tempimage2.size().height, GL_BGR, GL_UNSIGNED_BYTE, tempimage2.ptr());
-
+		//Fazer undistort à imagem de acordo com os parametros da camara
+		cv::undistort(tempimage2, undistorted, CamParam.CameraMatrix, CamParam.Distorsion);
+		//Detetar marcadores
+		MDetector.detect(undistorted, Markers, CamParam, 0.045);
+		//Desenhar imagem da camara
 		
+		glDrawPixels(undistorted.size().width, undistorted.size().height, GL_BGR, GL_UNSIGNED_BYTE, undistorted.ptr());
+		glClear(GL_DEPTH_BUFFER_BIT);
+
+		double proj_matrix[16];
+
+		////Desenhar cenas 3D na posição do marker
+		CamParam.glGetProjectionMatrix(undistorted.size(), GlWindowSize, proj_matrix, 0.05, 10, true);
+
+		glMatrixMode(GL_PROJECTION);
+		glLoadIdentity();
+		glLoadMatrixd(proj_matrix);
+
+		double modelview_matrix[16];
+
+		applymaterial(0);
+
+		applylights();
+
+		for (unsigned int m = 0; m < Markers.size(); m++)
+		{
+			//CvDrawingUtils::draw3dCube(frameOriginal, Markers[m], CamParam);
+			//CvDrawingUtils::draw3dAxis(frameOriginal, Markers[m], CamParam);
+
+			Markers[m].glGetModelViewMatrix(modelview_matrix);
+
+			glMatrixMode(GL_MODELVIEW);
+			glLoadIdentity();
+			glLoadMatrixd(modelview_matrix);
+
+			float size = 0.05;
+
+			glPushMatrix();
+			glEnable(GL_TEXTURE_2D);
+			glBindTexture(GL_TEXTURE_2D, textures[0]);
+			glTranslatef(0.0, 0.0, size / 4);
+			gluSphere(mysolid, size / 2, 20, 20);
+			glPopMatrix();
+			glPushMatrix();
+			glDisable(GL_TEXTURE_2D);
+			glColor3f(0.0, 0.0, 1.0);
+			glTranslatef(0.0, 0.0, size / 2);
+			glutWireCube(size);
+			glPopMatrix();
+		}
 
 		break;
 	}
