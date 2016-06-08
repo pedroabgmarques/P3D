@@ -67,7 +67,7 @@ int faceTextureAtual = 0;
 float newValuesWeight = 1.0;
 float accumulatorX = 0, accumulatorY = 0, accumulatorZ = 0;
 
-//Para deteção de faces e olhos
+//Para deteÃ§Ã£o de faces e olhos
 //VideoFaceDetector.h/cpp encontrado aqui:
 //https://github.com/mc-jesus/face_detect_n_track
 Rect faceRectangle;
@@ -112,7 +112,7 @@ void load_tga_image(std::string nome, GLuint texture, bool transparency)
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, im->width, im->height, 0, GL_RGB, GL_UNSIGNED_BYTE, im->imageData);
 	}
 	else{
-		//Textura com transparência (anéis de saturno)
+		//Textura com transparÃªncia (anÃ©is de saturno)
 		gluBuild2DMipmaps(GL_TEXTURE_2D, GL_RGB, im->width, im->height, GL_RGB, GL_UNSIGNED_BYTE, im->imageData); // MIPMAP
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, im->width, im->height, 0, GL_RGBA, GL_UNSIGNED_BYTE, im->imageData);
 	}
@@ -301,7 +301,7 @@ void initLights(void)
 	GLfloat light1_diffuse[] = { 1.0f, 1.0f, 1.0f, 1.0f };
 	GLfloat light1_specular[] = { 1.0f, 1.0f, 1.0f, 1.0f };
 	GLfloat spot_angle = 45.0f;
-	GLfloat spot_exp = 12.0f; // Maior valor = maior concentração de luz no centro
+	GLfloat spot_exp = 12.0f; // Maior valor = maior concentraÃ§Ã£o de luz no centro
 
 	// Fonte de luz ambiente
 	glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
@@ -315,14 +315,14 @@ void initLights(void)
 	glLightf(GL_LIGHT0, GL_LINEAR_ATTENUATION, 0.05);
 	glLightf(GL_LIGHT0, GL_QUADRATIC_ATTENUATION, 0.05);
 
-	// Fonte de luz cónica
+	// Fonte de luz cÃ³nica
 	glLightfv(GL_LIGHT1, GL_AMBIENT, light1_ambient);
 	glLightfv(GL_LIGHT1, GL_DIFFUSE, light1_diffuse);
 	glLightfv(GL_LIGHT1, GL_SPECULAR, light1_specular);
 	glLightf(GL_LIGHT1, GL_SPOT_CUTOFF, spot_angle);
 	glLightf(GL_LIGHT1, GL_SPOT_EXPONENT, spot_exp);
 
-	// Activa a utilização de iluminação
+	// Activa a utilizaÃ§Ã£o de iluminaÃ§Ã£o
 	glEnable(GL_LIGHTING);
 	// Activa a fonte de luz light0
 	glEnable(GL_LIGHT0);
@@ -332,9 +332,9 @@ void initLights(void)
 
 void applylights(void)
 {
-	// Define a posição de light0
+	// Define a posiÃ§Ã£o de light0
 	GLfloat light0_position[] = { 0.0f, 3.0f, 0.0f, 1.0f };
-	// Define a posição de direcção de light1
+	// Define a posiÃ§Ã£o de direcÃ§Ã£o de light1
 	GLfloat spot_position[] = { 0.0f, 3.0f, -5.0f, 1.0f };
 	GLfloat spot_direction[] = { 0.0f, -1.0f, 0.0f };
 
@@ -355,7 +355,7 @@ void init(void)
 	glEnable(GL_DEPTH_TEST);
 	glDepthMask(GL_TRUE);
 
-	// Define técnica de shading: GL_FLAT, GL_SMOOTH
+	// Define tÃ©cnica de shading: GL_FLAT, GL_SMOOTH
 	glShadeModel(GL_SMOOTH);
 
 	glPolygonMode(GL_FRONT, GL_FILL); // GL_LINE, GL_POINT, GL_FILL
@@ -651,7 +651,7 @@ void display()
 		applylights();
 
 		raioOrbitaAtual = raioOrbita + (circleRadius / 100.0);
-		//Cálculo do movimento de translação do planeta em volta do sol
+		//CÃ¡lculo do movimento de translaÃ§Ã£o do planeta em volta do sol
 		x = planetCenterX + raioOrbitaAtual * sin(moonOrbitIterator / 180.0 * 3.14);
 		y = planetCenterY;// *cos(moonOrbitIterator / 180.0 * 3.14);
 		z = circleRadius / (height / 2.0) + raioOrbitaAtual * cos(moonOrbitIterator / 180.0 * 3.14);
@@ -672,7 +672,7 @@ void display()
 		//Endireitar os planetas
 		glRotatef(-90.0, 1.0, 0.0, 0.0);
 
-		//Rotação sobre si próprio
+		//RotaÃ§Ã£o sobre si prÃ³prio
 		//glRotatef(_rotacaoAtual, 0.0, 1.0, 0.0);
 
 		//Endireitar os planetas
@@ -696,11 +696,11 @@ void display()
 		//Deteta as faces e olhos
 		//detectFaces(frameOriginal);
 
-		//Debug - desenhar o rectangulo e centro de deteção de face
+		//Debug - desenhar o rectangulo e centro de deteÃ§Ã£o de face
 		/*cv::rectangle(frameOriginal, detector.face(), cv::Scalar(255, 0, 0));
 		cv::circle(frameOriginal, detector.facePosition(), 30, cv::Scalar(0, 255, 0));*/
 
-		////Desenha o resultado da deteção
+		////Desenha o resultado da deteÃ§Ã£o
 		flip(frameOriginal, tempimage, 0);
 		flip(tempimage, tempimage2, 1);
 		glDrawPixels(tempimage2.size().width, tempimage2.size().height, GL_BGR, GL_UNSIGNED_BYTE, tempimage2.ptr());
@@ -739,7 +739,7 @@ void display()
 		newValuesWeight = 0.3;
 		accumulatorZ = (newValuesWeight * scale) + (1.0 - newValuesWeight) * accumulatorZ;
 
-		//Dar a escala correcta à textura aplicada
+		//Dar a escala correcta Ã  textura aplicada
 		
 		glScalef(accumulatorZ, accumulatorZ, 0);
 
@@ -792,7 +792,7 @@ void display()
 		flip(frameOriginal, tempimage, 0);
 		flip(tempimage, tempimage2, 1);
 
-		//Fazer undistort à imagem de acordo com os parametros da camara
+		//Fazer undistort Ã  imagem de acordo com os parametros da camara
 		cv::undistort(tempimage2, undistorted, CamParam.CameraMatrix, CamParam.Distorsion);
 		//Detetar marcadores
 		MDetector.detect(undistorted, Markers, CamParam, 0.045);
@@ -803,7 +803,7 @@ void display()
 
 		double proj_matrix[16];
 
-		////Desenhar cenas 3D na posição do marker
+		////Desenhar cenas 3D na posiÃ§Ã£o do marker
 		CamParam.glGetProjectionMatrix(undistorted.size(), GlWindowSize, proj_matrix, 0.05, 10, true);
 
 		glMatrixMode(GL_PROJECTION);
@@ -910,6 +910,37 @@ void idle()
 	CamParam.resize(frameOriginal.size());
 	
 }
+void cvAddText()
+{
+	//tenho de ver isto amanha 
+	//fui ver isto aki http://www.cs.iit.edu/~agam/cs512/lect-notes/opencv-intro/opencv-intro.html#SECTION00052000000000000000
+	CvFont font;
+	double hScale = 1.0;
+	double vScale = 1.0;
+	int    lineWidth = 1;
+	cvInitFont(&font, CV_FONT_HERSHEY_SIMPLEX | CV_FONT_ITALIC, hScale, vScale, 0, lineWidth);
+
+	Mat img = imread("mete se aki alguma coisa", CV_LOAD_IMAGE_UNCHANGED);
+
+	/*tou na duvida no qe tenho de meter no img*/
+	cvPutText(imread, "Texto exemplo", cvPoint(200, 400), &font, cvScalar(255, 255, 0));
+
+	/*outras fontes CV_FONT_HERSHEY_SIMPLEX, CV_FONT_HERSHEY_PLAIN,
+CV_FONT_HERSHEY_DUPLEX, CV_FONT_HERSHEY_COMPLEX,
+CV_FONT_HERSHEY_TRIPLEX, CV_FONT_HERSHEY_COMPLEX_SMALL,
+CV_FONT_HERSHEY_SCRIPT_SIMPLEX, CV_FONT_HERSHEY_SCRIPT_COMPLEX,*/
+}
+
+/*isto era outro metodo
+void ApresentarTexto(Mat image, char* window_name, RNG rng)
+{
+	Size textsize = getTextSize("OpenCV forever!", CV_FONT_HERSHEY_COMPLEX, 3, 5, 0);
+	Point org((width - textsize.width) / 2, (height - textsize.height) / 2);
+	int lineType = 8;
+
+	
+	
+}*/
 
 int main(int argc, char** argv)
 {
@@ -940,14 +971,14 @@ int main(int argc, char** argv)
 	glutInitWindowSize(width, height);
 	glutCreateWindow("OpenGL / OpenCV Example");
 
-	// Inicializações
+	// InicializaÃ§Ãµes
 	init();
 	initLights();
 	//Texturas para o planeta e lua
 	glGenTextures(2, textures);
 	load_tga_image("earth", textures[0], false);
 	load_tga_image("moon", textures[1], false);
-	//Texturas para sobrepor à face detetada
+	//Texturas para sobrepor Ã  face detetada
 	glGenTextures(4, faceDetectionTextures);
 	load_tga_image("ironman", faceDetectionTextures[0], true);
 	load_tga_image("mrt", faceDetectionTextures[1], true);
