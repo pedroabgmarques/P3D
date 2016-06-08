@@ -24,12 +24,18 @@
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="glm.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="tga.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="VideoFaceDetector.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="glm.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

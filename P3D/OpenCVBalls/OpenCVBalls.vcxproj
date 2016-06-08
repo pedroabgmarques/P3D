@@ -84,11 +84,13 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="glm.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="tga.cpp" />
     <ClCompile Include="VideoFaceDetector.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="glm.h" />
     <ClInclude Include="tga.h" />
     <ClInclude Include="VideoFaceDetector.h" />
   </ItemGroup>

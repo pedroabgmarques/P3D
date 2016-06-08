@@ -11,6 +11,7 @@
 #include <math.h>
 #include "tga.h"
 #include "VideoFaceDetector.h"
+#include "glm.h"
 
 #define _DMESH
 
@@ -77,6 +78,33 @@ Point facePosition;
 MarkerDetector MDetector;
 vector<Marker> Markers;
 CameraParameters CamParam;
+
+//Modelos 3D para o modo de marker detection
+const int nModelos = 7;
+int modeloAtual = 0;
+GLMmodel* pmodel[nModelos];
+
+void loadmodel(int nModelo, std::string nome, float scale)
+{
+	if (pmodel[nModelo] == NULL)
+	{
+
+		std::string impathfile = "models/" + nome + ".obj";
+		std::vector<char> writable(impathfile.begin(), impathfile.end());
+		writable.push_back('\0');
+
+		pmodel[nModelo] = glmReadOBJ(&writable[0]);
+		if (pmodel[nModelo] == NULL) { exit(0); }
+		else
+		{
+			glmUnitize(pmodel[nModelo]);
+			glmLinearTexture(pmodel[nModelo]);
+			glmScale(pmodel[nModelo], scale);
+			glmFacetNormals(pmodel[nModelo]);
+			glmVertexNormals(pmodel[nModelo], 90.0);
+		}
+	}
+}
 
 void load_tga_image(std::string nome, GLuint texture, bool transparency)
 {
@@ -294,7 +322,7 @@ void initLights(void)
 	GLfloat global_ambient[] = { 0.1f, 0.1f, 0.1f, 1.0f };
 	// Define a luz light0. Existem 8 fontes de luz no total.
 	GLfloat light0_ambient[] = { 0.2f, 0.2f, 0.2f, 1.0f };
-	GLfloat light0_diffuse[] = { 0.6f, 0.6f, 0.6f, 1.0f };
+	GLfloat light0_diffuse[] = { 0.8f, 0.8f, 0.8f, 1.0f };
 	GLfloat light0_specular[] = { 1.0f, 1.0f, 1.0f, 1.0f };
 	// Define a luz light1. Existem 8 fontes de luz no total.
 	GLfloat light1_ambient[] = { 0.1f, 0.1f, 0.1f, 1.0f };
@@ -333,9 +361,9 @@ void initLights(void)
 void applylights(void)
 {
 	// Define a posição de light0
-	GLfloat light0_position[] = { 0.0f, 3.0f, 0.0f, 1.0f };
+	GLfloat light0_position[] = { -1.0f, -3.0f, 0.0f, 1.0f };
 	// Define a posição de direcção de light1
-	GLfloat spot_position[] = { 0.0f, 3.0f, -5.0f, 1.0f };
+	GLfloat spot_position[] = { 0.0f, 3.0f, -1.0f, 1.0f };
 	GLfloat spot_direction[] = { 0.0f, -1.0f, 0.0f };
 
 	// Aplica a light0
@@ -344,6 +372,22 @@ void applylights(void)
 	// Aplica a light1
 	glLightfv(GL_LIGHT1, GL_POSITION, spot_position);
 	glLightfv(GL_LIGHT1, GL_SPOT_DIRECTION, spot_direction);
+
+	glDisable(GL_LIGHTING);
+
+	// Desenha uma esfera que sinaliza a posição da light0
+	glPushMatrix();
+	glColor3f(1.0, 1.0, 1.0);
+	glTranslatef(0.0f, 3.0f, 0.0f);
+	glutSolidSphere(0.1, 20, 20);
+	glPopMatrix();
+
+	// Desenha uma esfera que sinaliza a posição da light1
+	glPushMatrix();
+	glColor3f(1.0, 1.0, 1.0);
+	glTranslatef(0.0f, 3.0f, -10.0f);
+	glutSolidSphere(0.1, 20, 20);
+	glPopMatrix();
 
 	glEnable(GL_LIGHTING);
 }
@@ -794,6 +838,7 @@ void display()
 
 		//Fazer undistort à imagem de acordo com os parametros da camara
 		cv::undistort(tempimage2, undistorted, CamParam.CameraMatrix, CamParam.Distorsion);
+
 		//Detetar marcadores
 		MDetector.detect(undistorted, Markers, CamParam, 0.045);
 		//Desenhar imagem da camara
@@ -818,8 +863,6 @@ void display()
 
 		for (unsigned int m = 0; m < Markers.size(); m++)
 		{
-			//CvDrawingUtils::draw3dCube(frameOriginal, Markers[m], CamParam);
-			//CvDrawingUtils::draw3dAxis(frameOriginal, Markers[m], CamParam);
 
 			Markers[m].glGetModelViewMatrix(modelview_matrix);
 
@@ -832,14 +875,10 @@ void display()
 			glPushMatrix();
 			glEnable(GL_TEXTURE_2D);
 			glBindTexture(GL_TEXTURE_2D, textures[0]);
-			glTranslatef(0.0, 0.0, size / 4);
-			gluSphere(mysolid, size / 2, 20, 20);
-			glPopMatrix();
-			glPushMatrix();
-			glDisable(GL_TEXTURE_2D);
-			glColor3f(0.0, 0.0, 1.0);
-			glTranslatef(0.0, 0.0, size / 2);
-			glutWireCube(size);
+			glTranslatef(0.0, 0.0, size);
+			glRotatef(90, 1.0, 0.0, 0.0);
+			//gluSphere(mysolid, size / 2, 20, 20);
+			glmDraw(pmodel[modeloAtual], GLM_SMOOTH | GLM_MATERIAL);
 			glPopMatrix();
 		}
 
@@ -888,10 +927,20 @@ void keyboard(unsigned char key, int x, int y)
 		accumulatorZ = 0;
 		break;
 	case 'n':
-		faceTextureAtual += 1;
-		if (faceTextureAtual > nFacetextures){
-			faceTextureAtual = 0;
+		if (demoMode == 2){
+			faceTextureAtual += 1;
+			if (faceTextureAtual >= nFacetextures){
+				faceTextureAtual = 0;
+			}
 		}
+		if (demoMode == 3){
+			modeloAtual += 1;
+			if (modeloAtual >= nModelos){
+				modeloAtual = 0;
+			}
+		}
+		break;
+		
 	default:
 		break;
 	}
@@ -953,6 +1002,14 @@ int main(int argc, char** argv)
 	load_tga_image("mrt", faceDetectionTextures[1], true);
 	load_tga_image("lion", faceDetectionTextures[2], true);
 	load_tga_image("hitler", faceDetectionTextures[3], true);
+	//Modelos 3D para o modo de marker detection
+	loadmodel(0, "f-16", 0.05);
+	loadmodel(1, "al", 0.05);
+	loadmodel(2, "dolphins", 0.05);
+	loadmodel(3, "flowers", 0.05);
+	loadmodel(4, "porsche", 0.05);
+	loadmodel(5, "rose+vase", 0.05);
+	loadmodel(6, "soccerball", 0.03);
 
 	//Read camera calibration files
 	try{
@@ -962,8 +1019,6 @@ int main(int argc, char** argv)
 		cout << "Exception: " << ex.what() << endl;
 	}
 	
-
-
 	// set up GUI callback functions
 	glutDisplayFunc(display);
 	glutReshapeFunc(reshape);
