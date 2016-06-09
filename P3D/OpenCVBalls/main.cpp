@@ -552,23 +552,24 @@ void ObjectDetection(Mat& src_gray, Mat& src_display)
 	RNG rng(12345);
 	Scalar color;
 
-	vector<vector<Point>> contours; // Vector for storing contour
+	vector<vector<Point>> contours; // Vector para guardar os contornos encontrados
 	vector<Vec4i> hierarchy;
 
-	findContours(src_gray, contours, hierarchy, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE); // Find the contours in the image
+	// Encontrar os contornos na imagem
+	findContours(src_gray, contours, hierarchy, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE); 
 
 	if (contours.size() > 0){
 
 		//Foram encontrados contornos
-
 		//cout << contours.size() << endl;
 
-		for (int i = 0; i < contours.size(); i++) // iterate through each contour. 
+		//Guardar o indice do maior contorno
+		for (int i = 0; i < contours.size(); i++)
 		{
-			double a = contourArea(contours[i], false);  //  Find the area of contour
+			double a = contourArea(contours[i], false);
 			if (a>largest_area){
 				largest_area = a;
-				largest_contour_index = i;                //Store the index of largest contour
+				largest_contour_index = i;
 			}
 		}
 
@@ -622,7 +623,7 @@ void ObjectDetection(Mat& src_gray, Mat& src_display)
 		}
 	}
 
-	///HoughDetection - Slow and unreliable
+	///HoughDetection - Extremamente lento e com muitas falhas!
 
 	//// will hold the results of the detection
 	//std::vector<Vec3f> circles;
