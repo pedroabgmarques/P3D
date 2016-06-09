@@ -1,3 +1,43 @@
+/*
+OpenCV + OpenGL: Realidade Aumentada
+
+Trabalho realizado no âmbito da cadeira de Programação 3D do 2º Ano / 2º Semestre de EDJD @ IPCA
+Victor Marçal: 6713
+Paulo Nunes: 11287
+Pedro Marques: 10855
+Vitor Gomes: 10658
+
+Este programa implementa 4 modos de realidade aumentada:
+1 - "Positional Tracking"
+	É feito o tracking de um objeto com uma cor diferente da do background (configurável em runtime) e a posição do
+	objeto é aplicada à posição da camara.
+
+2 - "Augmented Reality"
+	É feito o tracking de um objeto colorido e o objeto detetado é "substituído" por uma esfera com a textura da terra,
+	em volta da qual se move outra esfera com a textura da lua.
+
+3 - "Instragram masks"
+	É feito o tracking da face do utilizador e uma textura é renderizada sobreposta à face, acompanhando o movimento
+	do utilizador. É possivel alterar a textura utilizada com a tecla N.
+
+4 - "Marker Detection"
+	É feito o tracking de um marker Aruco e um modelo 3D é renderizado na posição e com a orientação do marker.
+	É possível alterar o modelo renderizado com a tecla N.
+
+Controlos:
+q - Sair
+m - Próximo modo
+n - Próxima textura / modelo (modos 3 e 4)
+
+Dependências / Frameworks utilizadas:
+
+OpenGL
+https://www.opengl.org/
+
+OpenCV
+
+*/
+
 #include <iostream>
 #include "opencv2/highgui/highgui.hpp"
 #include "opencv2/imgproc/imgproc.hpp"
