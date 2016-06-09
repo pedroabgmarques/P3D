@@ -681,13 +681,7 @@ void display()
 		cout << "No frame captured!" << endl;
 	}
 
-	//////////////////////////////////////////////////////////////////////////////////
-	// Here, set up new parameters to render a scene viewed from the camera.
-
-	//set viewport
-	//glViewport(0, 0, frameFlipped.size().width, frameFlipped.size().height);
 	glViewport(0, 0, width, height);
-
 
 	float zoomRange = 0;
 	float x = 0, y = 0, z = 0;
@@ -699,13 +693,11 @@ void display()
 
 		glDisable(GL_TEXTURE_2D);
 
-		//set projection matrix using intrinsic camera params
 		glMatrixMode(GL_PROJECTION);
 		glLoadIdentity();
 		//FPV, zoom afeta FOV
 		gluPerspective(60 - circleRadius / 5, width / height, 0.1, 100);
 
-		//you will have to set modelview matrix using extrinsic camera params
 		glMatrixMode(GL_MODELVIEW);
 		glLoadIdentity();
 		gluLookAt(0, 0, 10, 0, 0, 0, 0, 1, 0);
@@ -714,25 +706,27 @@ void display()
 
 		zoomRange = ScreenToWorld((float)circleRadius, 20, 150, 0, 10, 1);
 
-		//move to the position where you want the 3D object to go
+		//mover a camara para a posição do objeto detetado
 		glTranslatef(ScreenToWorld((float)circleCenter.x, 0.0, (float)width, -width / 2.0, width / 2.0, 100.0),
 			ScreenToWorld((float)circleCenter.y, 0.0, (float)height, -height / 2.0, height / 2.0, 50.0),
 			zoomRange);
 
 
-		// Floor
+		// Desenhar o chão
 		glCallList(myDL);
 
+		// Desenhar um eixo 3D no centro do mundo
 		drawAxes(1.0);
 
+		//Definir e aplicar iluminação
 		applylights();
 
+		//Desenhar um teapot à esquerda do centro
 		glTranslatef(-2, 0, 0);
-
 		glutSolidTeapot(0.5);
 
+		//Desenhar uma chávena à direita do centro
 		glTranslatef(4, 0, 0);
-
 		glutSolidTeacup(0.5);
 
 		glPopMatrix();
@@ -755,6 +749,7 @@ void display()
 		glMatrixMode(GL_MODELVIEW);
 		glLoadIdentity();
 
+		//Desenhar a imagem da camara
 		flip(frameOriginal, tempimage, 0);
 		flip(tempimage, tempimage2, 1);
 		putText(tempimage2, "Modo 2 - Augmented Reality", cvPoint(10, height - 20), CV_FONT_HERSHEY_SIMPLEX, 0.5, Scalar(255, 255, 255), 1, 8, true);
@@ -763,12 +758,15 @@ void display()
 		putText(tempimage2, "Tecla M para passar ao proximo modo", cvPoint(10, height - 80), CV_FONT_HERSHEY_SIMPLEX, 0.5, Scalar(255, 255, 255), 1, 8, true);
 		glDrawPixels(tempimage2.size().width, tempimage2.size().height, GL_BGR, GL_UNSIGNED_BYTE, tempimage2.ptr());
 
+		//Limpar o depth buffer
 		glClear(GL_DEPTH_BUFFER_BIT);
 
+		//Setar a matrix de projeção
 		glMatrixMode(GL_PROJECTION);
 		glLoadIdentity();
 		glOrtho((float)width / (float)height, (float)-width / (float)height, -1, 1, -100, 100);
 
+		//Setar a matriz modelView
 		glMatrixMode(GL_MODELVIEW);
 		glLoadIdentity();
 
@@ -776,36 +774,39 @@ void display()
 
 		glColor4f(1.0, 1.0, 1.0, 1.0);
 
+		//Textura do planeta terra
 		glBindTexture(GL_TEXTURE_2D, textures[0]);
 
+		//Aplicar materiais e luzes
 		applymaterial(0);
-
 		applylights();
 
-		// Draw sphere
 		glPushMatrix();
 
+		//Setar como coordenadas do planeta as coordenadas do objeto detectado
 		planetCenterX = ScreenToWorld((float)circleCenter.x, 0.0, (float)width, -width / 2.0, width / 2.0, width / 2.65);
 		planetCenterY = -ScreenToWorld((float)circleCenter.y, 0.0, (float)height, -height / 2.0, height / 2.0, height / 2.0);
-
-		//move to the position where you want the 3D object to go
 		glTranslatef(planetCenterX, planetCenterY, 0);
+		//Rotação do planeta sobre si próprio
 		glRotatef(-spin, 0.0, 1.0, 0.0);
 		//Endireitar os planetas
 		glRotatef(-90.0, 1.0, 0.0, 0.0);
 		gluSphere(mysolid, circleRadius / (height / 2.0), 100, 100);
 
 		glPopMatrix();
+
+
 		glPushMatrix();
 
+		//Textura da lua
 		glBindTexture(GL_TEXTURE_2D, textures[1]);
 
+		//Aplicar materiais e luzes
 		applymaterial(0);
-
 		applylights();
 
+		//Cálculo do movimento de translação do planeta em volta do sol
 		raioOrbitaAtual = raioOrbita + (circleRadius / 100.0);
-		//CÃ¡lculo do movimento de translaÃ§Ã£o do planeta em volta do sol
 		x = planetCenterX + raioOrbitaAtual * sin(moonOrbitIterator / 180.0 * 3.14);
 		y = planetCenterY;// *cos(moonOrbitIterator / 180.0 * 3.14);
 		z = circleRadius / (height / 2.0) + raioOrbitaAtual * cos(moonOrbitIterator / 180.0 * 3.14);
@@ -832,6 +833,7 @@ void display()
 		//Endireitar os planetas
 		//glRotatef(-90.0, 1.0, 0.0, 0.0);
 
+		//Desenhar a lua
 		gluSphere(mysolid, (circleRadius / (height / 2.0)) / 2.0, 64, 64);
 
 		glPopMatrix();
@@ -847,17 +849,10 @@ void display()
 
 		glDisable(GL_TEXTURE_2D);
 
-		//Deteta as faces e olhos
-		//detectFaces(frameOriginal);
-
-		//Debug - desenhar o rectangulo e centro de deteÃ§Ã£o de face
-		/*cv::rectangle(frameOriginal, detector.face(), cv::Scalar(255, 0, 0));
-		cv::circle(frameOriginal, detector.facePosition(), 30, cv::Scalar(0, 255, 0));*/
-
 		glMatrixMode(GL_MODELVIEW);
 		glLoadIdentity();
 
-		////Desenha o resultado da deteÃ§Ã£o
+		//Desenhar a imagem da camara
 		flip(frameOriginal, tempimage, 0);
 		flip(tempimage, tempimage2, 1);
 		putText(tempimage2, "Modo 3 - Face Detection", cvPoint(10, height - 20), CV_FONT_HERSHEY_SIMPLEX, 0.5, Scalar(255, 255, 255), 1, 8, true);
@@ -876,19 +871,23 @@ void display()
 
 		glEnable(GL_TEXTURE_2D);
 
+		//Suporte para transparências na textura
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 		glColor4f(1.0, 1.0, 1.0, 1.0);
 
+		//Aplicar textura
 		glBindTexture(GL_TEXTURE_2D, faceDetectionTextures[faceTextureAtual]);
 
+		//Aplicar materiais e luzes
 		applymaterial(0);
-
 		applylights();
 
 		glPushMatrix();
+		//Rectangulo que envolve a face detectada
 		Rect face = detector.face();
+		//Posição central da face
 		Point facePos = detector.facePosition();
 
 		//Escrever valores
@@ -899,8 +898,7 @@ void display()
 		newValuesWeight = 0.3;
 		accumulatorZ = (newValuesWeight * scale) + (1.0 - newValuesWeight) * accumulatorZ;
 
-		//Dar a escala correcta Ã  textura aplicada
-
+		//Dar a escala correcta à textura aplicada
 		glScalef(accumulatorZ, accumulatorZ, 0);
 
 		//Escrever valores
@@ -921,15 +919,15 @@ void display()
 
 		//Desenhar a textura num quad
 		glBegin(GL_QUADS);
-		glTexCoord2f(0.0f, 0.0f);
-		glVertex3f(-1.0f, -1.0f, 0.0f);
-		glTexCoord2f(1.0f, 0.0f); // sempre 1.0f se quiser aplicar toda a textura
-		glVertex3f(1.0f, -1.0f, 0.0f);
-		glTexCoord2f(1.0f, 1.0f);
-		glVertex3f(1.0f, 1.0f, 0.0f);
-		glTexCoord2f(0.0f, 1.0f);
-		glVertex3f(-1.0f, 1.0f, 0.0f);
-		glEnd();
+			glTexCoord2f(0.0f, 0.0f);
+			glVertex3f(-1.0f, -1.0f, 0.0f);
+			glTexCoord2f(1.0f, 0.0f); // sempre 1.0f se quiser aplicar toda a textura
+			glVertex3f(1.0f, -1.0f, 0.0f);
+			glTexCoord2f(1.0f, 1.0f);
+			glVertex3f(1.0f, 1.0f, 0.0f);
+			glTexCoord2f(0.0f, 1.0f);
+			glVertex3f(-1.0f, 1.0f, 0.0f);
+			glEnd();
 		glPopMatrix();
 
 		break;
@@ -946,13 +944,10 @@ void display()
 		glMatrixMode(GL_MODELVIEW);
 		glLoadIdentity();
 
-		/*glPixelZoom(-1, -1);
-		glRasterPos2f(-1.3, 1);*/
-
 		flip(frameOriginal, tempimage, 0);
 		flip(tempimage, tempimage2, 1);
 
-		//Fazer undistort Ã  imagem de acordo com os parametros da camara
+		//Fazer undistort à imagem de acordo com os parametros da camara
 		cv::undistort(tempimage2, undistorted, CamParam.CameraMatrix, CamParam.Distorsion);
 
 		//Detetar marcadores
@@ -967,7 +962,7 @@ void display()
 
 		double proj_matrix[16];
 
-		////Desenhar cenas 3D na posiÃ§Ã£o do marker
+		//Desenhar cenas 3D na posição do marker
 		CamParam.glGetProjectionMatrix(undistorted.size(), GlWindowSize, proj_matrix, 0.05, 10, true);
 
 		glMatrixMode(GL_PROJECTION);
@@ -976,15 +971,15 @@ void display()
 
 		double modelview_matrix[16];
 
+		//Aplicar materiais e luzes
 		applymaterial(0);
-
 		applylights();
 
 		for (unsigned int m = 0; m < Markers.size(); m++)
 		{
 
+			//Aplicar a modelView do marcador
 			Markers[m].glGetModelViewMatrix(modelview_matrix);
-
 			glMatrixMode(GL_MODELVIEW);
 			glLoadIdentity();
 			glLoadMatrixd(modelview_matrix);
@@ -993,10 +988,11 @@ void display()
 
 			glPushMatrix();
 			glEnable(GL_TEXTURE_2D);
+			//Aplicar a textura
 			glBindTexture(GL_TEXTURE_2D, textures[0]);
+			//Colocar o modelo na posição correta
 			glTranslatef(0.0, 0.0, size);
 			glRotatef(90, 1.0, 0.0, 0.0);
-			//gluSphere(mysolid, size / 2, 20, 20);
 			glmDraw(pmodel[modeloAtual], GLM_SMOOTH | GLM_MATERIAL);
 			glPopMatrix();
 		}
