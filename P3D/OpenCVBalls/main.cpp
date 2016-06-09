@@ -666,7 +666,8 @@ void display()
 		glRenderString(0.0f, 2.0f, "Use um objeto vermelho");
 		glRenderString(0.0f, 4.0f, "(de preferencia uma esfera).");
 		glRenderString(0.0f, 6.0f, "Pode configurar a cor a detetar");
-		glRenderString(0.0f, 8.0f, "com os sliders da janela Controlo");
+		glRenderString(0.0f, 8.0f, "com os sliders da janela Controlo.");
+		glRenderString(0.0f, 10.0f, "Tecla M para mudar de modo");
 
 		break;
 	case 1:
@@ -684,6 +685,7 @@ void display()
 		putText(tempimage2, "Modo 2 - Augmented Reality", cvPoint(10, height - 20), CV_FONT_HERSHEY_SIMPLEX, 0.5, Scalar(255, 255, 255), 1, 8, true);
 		putText(tempimage2, "Utilize um objeto vermelho (de preferencia uma esfera).", cvPoint(10, height - 40), CV_FONT_HERSHEY_SIMPLEX, 0.5, Scalar(255, 255, 255), 1, 8, true);
 		putText(tempimage2, "Pode alterar a cor a detetar com os sliders da janela Controlo", cvPoint(10, height - 60), CV_FONT_HERSHEY_SIMPLEX, 0.5, Scalar(255, 255, 255), 1, 8, true);
+		putText(tempimage2, "Tecla M para passar ao proximo modo", cvPoint(10, height - 80), CV_FONT_HERSHEY_SIMPLEX, 0.5, Scalar(255, 255, 255), 1, 8, true);
 		glDrawPixels(tempimage2.size().width, tempimage2.size().height, GL_BGR, GL_UNSIGNED_BYTE, tempimage2.ptr());
 
 		glClear(GL_DEPTH_BUFFER_BIT);
@@ -785,6 +787,7 @@ void display()
 		flip(tempimage, tempimage2, 1);
 		putText(tempimage2, "Modo 3 - Face Detection", cvPoint(10, height - 20), CV_FONT_HERSHEY_SIMPLEX, 0.5, Scalar(255, 255, 255), 1, 8, true);
 		putText(tempimage2, "Tecla N para alterar a textura", cvPoint(10, height - 40), CV_FONT_HERSHEY_SIMPLEX, 0.5, Scalar(255, 255, 255), 1, 8, true);
+		putText(tempimage2, "Tecla M para passar ao proximo modo", cvPoint(10, height - 60), CV_FONT_HERSHEY_SIMPLEX, 0.5, Scalar(255, 255, 255), 1, 8, true);
 		glDrawPixels(tempimage2.size().width, tempimage2.size().height, GL_BGR, GL_UNSIGNED_BYTE, tempimage2.ptr());
 
 		glClear(GL_DEPTH_BUFFER_BIT);
@@ -883,6 +886,7 @@ void display()
 		
 		putText(undistorted, "Modo 4 - Marker Detection", cvPoint(10, height - 20), CV_FONT_HERSHEY_SIMPLEX, 0.5, Scalar(255, 255, 255), 1, 8, true);
 		putText(undistorted, "Tecla N para alterar o modelo 3D", cvPoint(10, height - 40), CV_FONT_HERSHEY_SIMPLEX, 0.5, Scalar(255, 255, 255), 1, 8, true);
+		putText(undistorted, "Tecla M para passar ao proximo modo", cvPoint(10, height - 60), CV_FONT_HERSHEY_SIMPLEX, 0.5, Scalar(255, 255, 255), 1, 8, true);
 		glDrawPixels(undistorted.size().width, undistorted.size().height, GL_BGR, GL_UNSIGNED_BYTE, undistorted.ptr());
 		glClear(GL_DEPTH_BUFFER_BIT);
 
