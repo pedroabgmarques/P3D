@@ -35,7 +35,25 @@ OpenGL
 https://www.opengl.org/
 
 OpenCV
+http://opencv.org/
 
+Glew
+http://glew.sourceforge.net/
+
+Freeglut
+http://freeglut.sourceforge.net/
+
+Aruco
+http://www.uco.es/investiga/grupos/ava/node/26
+
+TGA
+ajbrf@yahoo.com
+
+VideoFaceDetector
+https://github.com/mc-jesus/face_detect_n_track
+
+GLM
+http://www.pobox.com/~nate
 */
 
 #include <iostream>
@@ -59,38 +77,51 @@ using namespace cv;
 using namespace std;
 using namespace aruco;
 
-Mat frameOriginal, frameHSV, frameFiltered, frameFlipped, fgMaskMOG, controlFlipped, tempimage, tempimage2, faceDetection, undistorted;
 
-Ptr<BackgroundSubtractor> pMOG; //MOG Background subtractor
 
+//Materiais utilizados
+Mat frameOriginal, frameHSV, frameFiltered, frameFlipped, fgMaskMOG, controlFlipped, tempimage, tempimage2, 
+	faceDetection, undistorted;
+
+//Instância de MOG Background subtractor
+Ptr<BackgroundSubtractor> pMOG; 
+
+//Valores iniciais do filtro de cor
 int iLowH = 0;
 int iHighH = 179;
-
 int iLowS = 133;
 int iHighS = 250;
-
 int iLowV = 180;
 int iHighV = 255;
 
+//Instância de camera capture
+VideoCapture cap(CV_CAP_ANY);
 bool frameCapturedSuccessfully = false;
-VideoCapture cap(CV_CAP_ANY); //capture the video from web cam
-char *classifierFaces = "haarcascade_frontalface_default.xml";
-char *classifierEyes = "haarcascade_mcs_eyepair_big.xml";
-VideoFaceDetector detector(classifierFaces, cap);
+//Dimensões do frame capturado / janela glut
 int width = cap.get(CV_CAP_PROP_FRAME_WIDTH);
 int height = cap.get(CV_CAP_PROP_FRAME_HEIGHT);
 Size GlWindowSize = Size(width, height);
 
+//Classificadores para faces e olhos
+char *classifierFaces = "haarcascade_frontalface_default.xml";
+char *classifierEyes = "haarcascade_mcs_eyepair_big.xml";
+
+//Detector de faces
+VideoFaceDetector detector(classifierFaces, cap);
 Point circleCenter = Point(0, 0);
 int circleRadius = 2;
+Rect faceRectangle;
+Point facePosition;
 
+//Display list para o chão do Modo 1
 int myDL;
 
-//Modos existentes: position tracking e augmented reality
+//Modos existentes: 1 - Position tracking; 2 - Augmented reality; 3 - Instagram masks; 4 - Marker Detection
 int demoModes = 4;
-//Modo corrente
+//Modo atual
 int demoMode = 0;
 
+//Planeta / Lua - texturas, rotação, orbita, etc.
 tgaInfo *im;
 GLuint textureEarth, textureMoon;
 GLUquadric *mysolid;
@@ -100,6 +131,8 @@ float raioOrbita = 0.1;
 float periodoOrbital = 1.0;
 float moonOrbitIterator = 0;
 GLuint textures[2];
+
+//Instagram masks - gestão de texturas
 const int nFacetextures = 4;
 GLuint faceDetectionTextures[nFacetextures];
 int faceTextureAtual = 0;
@@ -107,12 +140,6 @@ int faceTextureAtual = 0;
 //Usado para implementar um rolling moving average de modo a limpar o sinal 
 float newValuesWeight = 1.0;
 float accumulatorX = 0, accumulatorY = 0, accumulatorZ = 0;
-
-//Para deteÃ§Ã£o de faces e olhos
-//VideoFaceDetector.h/cpp encontrado aqui:
-//https://github.com/mc-jesus/face_detect_n_track
-Rect faceRectangle;
-Point facePosition;
 
 //Usado para implementar o marker detection (biblioteca Aruco)
 MarkerDetector MDetector;
