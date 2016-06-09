@@ -160,8 +160,10 @@ GLMmodel* pmodel[nModelos];
 #pragma endregion
 
 #pragma region Methods Declaration
+
 void floorAndWallsDL(void);
 void applymaterial(int type);
+
 #pragma endregion
 
 #pragma region Metodos
@@ -671,7 +673,7 @@ void display()
 			imshow("Control", controlFlipped);
 
 			//runs the detection, and update the display
-			HoughDetection(frameFiltered, frameOriginal);
+			ObjectDetection(frameFiltered, frameOriginal);
 		}
 	}
 	else{
@@ -709,11 +711,11 @@ void display()
 
 		glPushMatrix();
 
-		zoomRange = RangeAToRangeB((float)circleRadius, 20, 150, 0, 10, 1);
+		zoomRange = ScreenToWorld((float)circleRadius, 20, 150, 0, 10, 1);
 
 		//move to the position where you want the 3D object to go
-		glTranslatef(RangeAToRangeB((float)circleCenter.x, 0.0, (float)width, -width / 2.0, width / 2.0, 100.0),
-			RangeAToRangeB((float)circleCenter.y, 0.0, (float)height, -height / 2.0, height / 2.0, 50.0),
+		glTranslatef(ScreenToWorld((float)circleCenter.x, 0.0, (float)width, -width / 2.0, width / 2.0, 100.0),
+			ScreenToWorld((float)circleCenter.y, 0.0, (float)height, -height / 2.0, height / 2.0, 50.0),
 			zoomRange);
 
 
@@ -782,8 +784,8 @@ void display()
 		// Draw sphere
 		glPushMatrix();
 
-		planetCenterX = RangeAToRangeB((float)circleCenter.x, 0.0, (float)width, -width / 2.0, width / 2.0, width / 2.65);
-		planetCenterY = -RangeAToRangeB((float)circleCenter.y, 0.0, (float)height, -height / 2.0, height / 2.0, height / 2.0);
+		planetCenterX = ScreenToWorld((float)circleCenter.x, 0.0, (float)width, -width / 2.0, width / 2.0, width / 2.65);
+		planetCenterY = -ScreenToWorld((float)circleCenter.y, 0.0, (float)height, -height / 2.0, height / 2.0, height / 2.0);
 
 		//move to the position where you want the 3D object to go
 		glTranslatef(planetCenterX, planetCenterY, 0);
@@ -891,7 +893,7 @@ void display()
 		//Escrever valores
 		//cout << face.width << endl;
 
-		float scale = RangeAToRangeB((float)face.width, 80.0, 480.0, 0.35, 1.4, 1.0);
+		float scale = ScreenToWorld((float)face.width, 80.0, 480.0, 0.35, 1.4, 1.0);
 
 		newValuesWeight = 0.3;
 		accumulatorZ = (newValuesWeight * scale) + (1.0 - newValuesWeight) * accumulatorZ;
@@ -904,8 +906,8 @@ void display()
 		//cout << facePos.x << " x " << facePos.y << endl;
 
 		//Colocar a textura no sitio certo
-		float faceCenterX = RangeAToRangeB((float)facePos.x, 10, 640, -width / 2.0, width / 2.0, 180);
-		float faceCenterY = -RangeAToRangeB((float)facePos.y, 40, 480, -height / 2.0, height / 2.0, 180);
+		float faceCenterX = ScreenToWorld((float)facePos.x, 10, 640, -width / 2.0, width / 2.0, 180);
+		float faceCenterY = -ScreenToWorld((float)facePos.y, 40, 480, -height / 2.0, height / 2.0, 180);
 
 		newValuesWeight = 0.5;
 
