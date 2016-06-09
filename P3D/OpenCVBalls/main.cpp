@@ -56,6 +56,8 @@ GLM
 http://www.pobox.com/~nate
 */
 
+#pragma region Includes
+
 #include <iostream>
 #include "opencv2/highgui/highgui.hpp"
 #include "opencv2/imgproc/imgproc.hpp"
@@ -71,13 +73,17 @@ http://www.pobox.com/~nate
 #include "VideoFaceDetector.h"
 #include "glm.h"
 
-#define _DMESH
+#pragma endregion
+
+#pragma region Namespaces
 
 using namespace cv;
 using namespace std;
 using namespace aruco;
 
+#pragma endregion
 
+#pragma region Propriedades
 
 //Materiais utilizados
 Mat frameOriginal, frameHSV, frameFiltered, frameFlipped, fgMaskMOG, controlFlipped, tempimage, tempimage2, 
@@ -121,7 +127,7 @@ int demoModes = 4;
 //Modo atual
 int demoMode = 0;
 
-//Planeta / Lua - texturas, rotação, orbita, etc.
+//Modo 2, Planeta / Lua - texturas, rotação, orbita, etc.
 tgaInfo *im;
 GLuint textureEarth, textureMoon;
 GLUquadric *mysolid;
@@ -132,7 +138,7 @@ float periodoOrbital = 1.0;
 float moonOrbitIterator = 0;
 GLuint textures[2];
 
-//Instagram masks - gestão de texturas
+//Modo 3, Instagram masks - gestão de texturas
 const int nFacetextures = 4;
 GLuint faceDetectionTextures[nFacetextures];
 int faceTextureAtual = 0;
@@ -151,6 +157,251 @@ const int nModelos = 7;
 int modeloAtual = 0;
 GLMmodel* pmodel[nModelos];
 
+#pragma endregion
+
+#pragma region Methods Declaration
+void floorAndWallsDL(void);
+void applymaterial(int type);
+#pragma endregion
+
+#pragma region Metodos
+
+#pragma region Initialize
+
+//Opções e inicialização do OpenGL
+void init(void)
+{
+
+	glEnable(GL_CULL_FACE_MODE);
+	glEnable(GL_DEPTH_TEST);
+	glDepthMask(GL_TRUE);
+
+	// Define tÃ©cnica de shading: GL_FLAT, GL_SMOOTH
+	glShadeModel(GL_SMOOTH);
+
+	glPolygonMode(GL_FRONT, GL_FILL); // GL_LINE, GL_POINT, GL_FILL
+
+	// Compila o modelo
+	floorAndWallsDL();
+}
+
+//Define e ativa duas fonte de luz: posicional e cónica
+void initLights(void)
+{
+	// Define a luz ambiente global
+	GLfloat global_ambient[] = { 0.1f, 0.1f, 0.1f, 1.0f };
+	// Define a luz light0. Existem 8 fontes de luz no total.
+	GLfloat light0_ambient[] = { 0.2f, 0.2f, 0.2f, 1.0f };
+	GLfloat light0_diffuse[] = { 0.8f, 0.8f, 0.8f, 1.0f };
+	GLfloat light0_specular[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+	// Define a luz light1. Existem 8 fontes de luz no total.
+	GLfloat light1_ambient[] = { 0.1f, 0.1f, 0.1f, 1.0f };
+	GLfloat light1_diffuse[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+	GLfloat light1_specular[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+	GLfloat spot_angle = 45.0f;
+	GLfloat spot_exp = 12.0f; // Maior valor = maior concentraÃ§Ã£o de luz no centro
+
+	// Fonte de luz ambiente
+	glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
+	glLightModelfv(GL_LIGHT_MODEL_AMBIENT, global_ambient);
+
+	// Fonte de luz posicional
+	glLightfv(GL_LIGHT0, GL_AMBIENT, light0_ambient);
+	glLightfv(GL_LIGHT0, GL_DIFFUSE, light0_diffuse);
+	glLightfv(GL_LIGHT0, GL_SPECULAR, light0_specular);
+	glLightf(GL_LIGHT0, GL_CONSTANT_ATTENUATION, 0.1);
+	glLightf(GL_LIGHT0, GL_LINEAR_ATTENUATION, 0.05);
+	glLightf(GL_LIGHT0, GL_QUADRATIC_ATTENUATION, 0.05);
+
+	// Fonte de luz cÃ³nica
+	glLightfv(GL_LIGHT1, GL_AMBIENT, light1_ambient);
+	glLightfv(GL_LIGHT1, GL_DIFFUSE, light1_diffuse);
+	glLightfv(GL_LIGHT1, GL_SPECULAR, light1_specular);
+	glLightf(GL_LIGHT1, GL_SPOT_CUTOFF, spot_angle);
+	glLightf(GL_LIGHT1, GL_SPOT_EXPONENT, spot_exp);
+
+	// Activa a utilizaÃ§Ã£o de iluminaÃ§Ã£o
+	glEnable(GL_LIGHTING);
+	// Activa a fonte de luz light0
+	glEnable(GL_LIGHT0);
+	// Activa a fonte de luz light1
+	glEnable(GL_LIGHT1);
+}
+
+#pragma endregion
+
+#pragma region DisplayLists
+
+//Define a display list do chão do Modo 1
+void floorAndWallsDL(void)
+{
+	int x, z;
+
+	myDL = glGenLists(1);
+
+	glNewList(myDL, GL_COMPILE);
+	// Floor
+	for (x = -100; x <= 100; x += 2)
+	{
+		for (z = -100; z <= 100; z += 2)
+		{
+			applymaterial(0);
+
+			glBegin(GL_QUADS);
+			glNormal3f(0.0, 1.0, 0.0);
+			glVertex3f(x, 0.0f, z);				// Top Left
+			glVertex3f(x + 1.0f, 0.0f, z);		// Top Right
+			glVertex3f(x + 1.0f, 0.0f, z - 1.0f);	// Bottom Right
+			glVertex3f(x, 0.0f, z - 1.0f);		// Bottom Left
+			glEnd();
+
+		}
+		for (z = -99; z <= 100; z += 2)
+		{
+			applymaterial(1);
+
+			glBegin(GL_QUADS);
+			glNormal3f(0.0f, 1.0f, 0.0f);
+			glVertex3f(x, 0.0f, z);				// Top Left
+			glVertex3f(x + 1.0f, 0.0f, z);		// Top Right
+			glVertex3f(x + 1.0f, 0.0f, z - 1.0f);	// Bottom Right
+			glVertex3f(x, 0.0f, z - 1.0f);		// Bottom Left
+			glEnd();
+
+		}
+	}
+	for (x = -99; x <= 100; x += 2)
+	{
+		for (z = -99; z <= 100; z += 2)
+		{
+			applymaterial(0);
+
+			glBegin(GL_QUADS);
+			glNormal3f(0.0, 1.0, 0.0);
+			glVertex3f(x, 0.0f, z);				// Top Left
+			glVertex3f(x + 1.0f, 0.0f, z);		// Top Right
+			glVertex3f(x + 1.0f, 0.0f, z - 1.0f);	// Bottom Right
+			glVertex3f(x, 0.0f, z - 1.0f);		// Bottom Left
+			glEnd();
+
+		}
+		for (z = -100; z <= 100; z += 2)
+		{
+			applymaterial(2);
+
+			glBegin(GL_QUADS);
+			glNormal3f(0.0f, 1.0f, 0.0f);
+			glVertex3f(x, 0.0f, z);				// Top Left
+			glVertex3f(x + 1.0f, 0.0f, z);		// Top Right
+			glVertex3f(x + 1.0f, 0.0f, z - 1.0f);	// Bottom Right
+			glVertex3f(x, 0.0f, z - 1.0f);		// Bottom Left
+			glEnd();
+
+		}
+	}
+
+	glBegin(GL_QUADS);
+	glNormal3f(1.0f, 0.0f, 0.0f);
+	glVertex3f(-100.0f, 20.0f, -100.0f);				// Top Left
+	glVertex3f(100.0f, 20.0f, -100.0f);		// Top Right
+	glVertex3f(100.0f, 0.0f, -100.0f);	// Bottom Right
+	glVertex3f(-100.0f, 0.0f, -100.0f);		// Bottom Left
+	glEnd();
+
+	glBegin(GL_QUADS);
+	glNormal3f(-1.0f, 0.0f, 0.0f);
+	glVertex3f(-100.0f, 20.0f, 100.0f);				// Top Left
+	glVertex3f(100.0f, 20.0f, 100.0f);		// Top Right
+	glVertex3f(100.0f, 0.0f, 100.0f);	// Bottom Right
+	glVertex3f(-100.0f, 0.0f, 100.0f);		// Bottom Left
+	glEnd();
+
+	glBegin(GL_QUADS);
+	glNormal3f(-1.0f, 0.0f, 0.0f);
+	glVertex3f(100.0f, 20.0f, -100.0f);				// Top Left
+	glVertex3f(100.0f, 20.0f, 100.0f);		// Top Right
+	glVertex3f(100.0f, 0.0f, 100.0f);	// Bottom Right
+	glVertex3f(100.0f, 0.0f, -100.0f);		// Bottom Left
+	glEnd();
+
+	glBegin(GL_QUADS);
+	glNormal3f(-1.0f, 0.0f, 0.0f);
+	glVertex3f(-100.0f, 20.0f, -100.0f);				// Top Left
+	glVertex3f(-100.0f, 20.0f, 100.0f);		// Top Right
+	glVertex3f(-100.0f, 0.0f, 100.0f);	// Bottom Right
+	glVertex3f(-100.0f, 0.0f, -100.0f);		// Bottom Left
+	glEnd();
+
+
+
+	glEndList();
+}
+
+#pragma endregion
+
+#pragma region ApplyLightAndMaterial
+
+//Define e aplica um determinado material
+void applymaterial(int type)
+{
+	// Define as propriedades dos materiais
+	// Type: 0 (Branco); 1 (Amarelo); 2 (Ciano); 3 (Branco-Emissor)
+	GLfloat mat_ambient[4][4] = { { 1.0f, 1.0f, 1.0f, 1.0f }, { 1.0f, 1.0f, 0.0f, 1.0f }, { 0.0f, 1.0f, 1.0f, 1.0f }, { 1.0f, 1.0f, 1.0f, 1.0f } };
+	GLfloat mat_diffuse[4][4] = { { 0.5f, 0.5f, 0.5f, 1.0f }, { 0.5f, 0.5f, 0.0f, 1.0f }, { 0.0f, 0.5f, 0.5f, 1.0f }, { 0.5f, 0.5f, 0.5f, 1.0f } };
+	GLfloat mat_specular[4][4] = { { 1.0f, 1.0f, 1.0f, 1.0f }, { 1.0f, 1.0f, 0.0f, 1.0f }, { 0.0f, 1.0f, 1.0f, 1.0f }, { 1.0f, 1.0f, 1.0f, 1.0f } };
+	GLfloat mat_emission[4][4] = { { 0.0f, 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 0.0f, 0.0f }, { 1.0f, 1.0f, 1.0f, 1.0f } };
+	GLfloat mat_shininess[4][1] = { { 20.0f }, { 20.0f }, { 20.0f }, { 20.0f } };
+
+	if ((type >= 0) && (type < 4))
+	{
+		glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, mat_ambient[type]); // GL_FRONT, GL_FRONT_AND_BACK , GL_BACK, 
+		glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, mat_diffuse[type]);
+		glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, mat_specular[type]);
+		glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, mat_emission[type]);
+		glMaterialfv(GL_FRONT_AND_BACK, GL_SHININESS, mat_shininess[type]);
+	}
+}
+
+//Define a posição e aplica duas fontes de luz
+void applylights(void)
+{
+	// Define a posição de light0
+	GLfloat light0_position[] = { -1.0f, -3.0f, 0.0f, 1.0f };
+	// Define a posição de direcção de light1
+	GLfloat spot_position[] = { 0.0f, 3.0f, -1.0f, 1.0f };
+	GLfloat spot_direction[] = { 0.0f, -1.0f, 0.0f };
+
+	// Aplica a light0
+	glLightfv(GL_LIGHT0, GL_POSITION, light0_position);
+
+	// Aplica a light1
+	glLightfv(GL_LIGHT1, GL_POSITION, spot_position);
+	glLightfv(GL_LIGHT1, GL_SPOT_DIRECTION, spot_direction);
+
+	glDisable(GL_LIGHTING);
+
+	// Desenha uma esfera que sinaliza a posição da light0
+	glPushMatrix();
+	glColor3f(1.0, 1.0, 1.0);
+	glTranslatef(0.0f, 3.0f, 0.0f);
+	glutSolidSphere(0.1, 20, 20);
+	glPopMatrix();
+
+	// Desenha uma esfera que sinaliza a posição da light1
+	glPushMatrix();
+	glColor3f(1.0, 1.0, 1.0);
+	glTranslatef(0.0f, 3.0f, -10.0f);
+	glutSolidSphere(0.1, 20, 20);
+	glPopMatrix();
+
+	glEnable(GL_LIGHTING);
+}
+
+#pragma endregion
+
+#pragma region Utils
+
+//Carrega um modelo 3D em formato obj com uma determinada escala para um vector de modelos 3D
 void loadmodel(int nModelo, std::string nome, float scale)
 {
 	if (pmodel[nModelo] == NULL)
@@ -173,6 +424,7 @@ void loadmodel(int nModelo, std::string nome, float scale)
 	}
 }
 
+//Carrega uma textura em formato tga para um vetor de texturas
 void load_tga_image(std::string nome, GLuint texture, bool transparency)
 {
 	std::string impathfile = "textures/" + nome + ".tga";
@@ -217,264 +469,7 @@ void load_tga_image(std::string nome, GLuint texture, bool transparency)
 	tgaDestroy(im);
 }
 
-void draw_mesh(int xmin, int xmax, int zmin, int zmax)
-{
-	int x, z;
-	int xstep, zstep;
-	float xtmp, ztmp;
-
-	xstep = 5;
-	zstep = 5;
-
-	int y = -5;
-
-	glBegin(GL_TRIANGLES);
-	for (x = 0; x<xstep; x++)
-	{
-		xtmp = (float)(xmax - xmin) / (float)xstep;
-
-		for (z = 0; z<zstep; z++)
-		{
-			ztmp = (float)(zmax - zmin) / (float)zstep;
-
-			glNormal3f(0.0f, 1.0f, 0.0f);
-			glVertex3f(xmin + (float)x*(float)xtmp, y, zmin + (float)z*(float)ztmp);
-			glVertex3f(xmin + (float)(x + 1)*(float)xtmp, y, zmin + (float)z*(float)ztmp);
-			glVertex3f(xmin + (float)x*(float)xtmp, y, zmin + (float)(z + 1)*(float)ztmp);
-
-			glNormal3f(0.0f, 1.0f, 0.0f);
-			glVertex3f(xmin + (float)(x + 1)*(float)xtmp, y, zmin + (float)z*(float)ztmp);
-			glVertex3f(xmin + (float)(x + 1)*(float)xtmp, y, zmin + (float)(z + 1)*(float)ztmp);
-			glVertex3f(xmin + (float)x*(float)xtmp, y, zmin + (float)(z + 1)*(float)ztmp);
-		}
-	}
-	glEnd();
-}
-
-void applymaterial(int type)
-{
-	// Define as propriedades dos materiais
-	// Type: 0 (Branco); 1 (Amarelo); 2 (Ciano); 3 (Branco-Emissor)
-	GLfloat mat_ambient[4][4] = { { 1.0f, 1.0f, 1.0f, 1.0f }, { 1.0f, 1.0f, 0.0f, 1.0f }, { 0.0f, 1.0f, 1.0f, 1.0f }, { 1.0f, 1.0f, 1.0f, 1.0f } };
-	GLfloat mat_diffuse[4][4] = { { 0.5f, 0.5f, 0.5f, 1.0f }, { 0.5f, 0.5f, 0.0f, 1.0f }, { 0.0f, 0.5f, 0.5f, 1.0f }, { 0.5f, 0.5f, 0.5f, 1.0f } };
-	GLfloat mat_specular[4][4] = { { 1.0f, 1.0f, 1.0f, 1.0f }, { 1.0f, 1.0f, 0.0f, 1.0f }, { 0.0f, 1.0f, 1.0f, 1.0f }, { 1.0f, 1.0f, 1.0f, 1.0f } };
-	GLfloat mat_emission[4][4] = { { 0.0f, 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 0.0f, 0.0f }, { 1.0f, 1.0f, 1.0f, 1.0f } };
-	GLfloat mat_shininess[4][1] = { { 20.0f }, { 20.0f }, { 20.0f }, { 20.0f } };
-
-	if ((type >= 0) && (type < 4))
-	{
-		glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, mat_ambient[type]); // GL_FRONT, GL_FRONT_AND_BACK , GL_BACK, 
-		glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, mat_diffuse[type]);
-		glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, mat_specular[type]);
-		glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, mat_emission[type]);
-		glMaterialfv(GL_FRONT_AND_BACK, GL_SHININESS, mat_shininess[type]);
-	}
-}
-
-void floorAndWallsDL(void)
-{
-	int x, z;
-
-	myDL = glGenLists(1);
-
-	glNewList(myDL, GL_COMPILE);
-	// Floor
-	for (x = -100; x <= 100; x += 2)
-	{
-		for (z = -100; z <= 100; z += 2)
-		{
-			applymaterial(0);
-#ifdef _DMESH
-			draw_mesh(x, x + 1.0f, z, z - 1.0f);
-#else
-			glBegin(GL_QUADS);
-			glNormal3f(0.0, 1.0, 0.0);
-			glVertex3f(x, 0.0f, z);				// Top Left
-			glVertex3f(x + 1.0f, 0.0f, z);		// Top Right
-			glVertex3f(x + 1.0f, 0.0f, z - 1.0f);	// Bottom Right
-			glVertex3f(x, 0.0f, z - 1.0f);		// Bottom Left
-			glEnd();
-#endif
-		}
-		for (z = -99; z <= 100; z += 2)
-		{
-			applymaterial(1);
-#ifdef _DMESH
-			draw_mesh(x, x + 1.0f, z, z - 1.0f);
-#else
-			glBegin(GL_QUADS);
-			glNormal3f(0.0f, 1.0f, 0.0f);
-			glVertex3f(x, 0.0f, z);				// Top Left
-			glVertex3f(x + 1.0f, 0.0f, z);		// Top Right
-			glVertex3f(x + 1.0f, 0.0f, z - 1.0f);	// Bottom Right
-			glVertex3f(x, 0.0f, z - 1.0f);		// Bottom Left
-			glEnd();
-#endif
-		}
-	}
-	for (x = -99; x <= 100; x += 2)
-	{
-		for (z = -99; z <= 100; z += 2)
-		{
-			applymaterial(0);
-#ifdef _DMESH
-			draw_mesh(x, x + 1.0f, z, z - 1.0f);
-#else
-			glBegin(GL_QUADS);
-			glNormal3f(0.0, 1.0, 0.0);
-			glVertex3f(x, 0.0f, z);				// Top Left
-			glVertex3f(x + 1.0f, 0.0f, z);		// Top Right
-			glVertex3f(x + 1.0f, 0.0f, z - 1.0f);	// Bottom Right
-			glVertex3f(x, 0.0f, z - 1.0f);		// Bottom Left
-			glEnd();
-#endif
-		}
-		for (z = -100; z <= 100; z += 2)
-		{
-			applymaterial(2);
-#ifdef _DMESH
-			draw_mesh(x, x + 1.0f, z, z - 1.0f);
-#else
-			glBegin(GL_QUADS);
-			glNormal3f(0.0f, 1.0f, 0.0f);
-			glVertex3f(x, 0.0f, z);				// Top Left
-			glVertex3f(x + 1.0f, 0.0f, z);		// Top Right
-			glVertex3f(x + 1.0f, 0.0f, z - 1.0f);	// Bottom Right
-			glVertex3f(x, 0.0f, z - 1.0f);		// Bottom Left
-			glEnd();
-#endif
-		}
-	}
-
-	glBegin(GL_QUADS);
-	glNormal3f(1.0f, 0.0f, 0.0f);
-	glVertex3f(-100.0f, 20.0f, -100.0f);				// Top Left
-	glVertex3f(100.0f, 20.0f, -100.0f);		// Top Right
-	glVertex3f(100.0f, 0.0f, -100.0f);	// Bottom Right
-	glVertex3f(-100.0f, 0.0f, -100.0f);		// Bottom Left
-	glEnd();
-
-	glBegin(GL_QUADS);
-	glNormal3f(-1.0f, 0.0f, 0.0f);
-	glVertex3f(-100.0f, 20.0f, 100.0f);				// Top Left
-	glVertex3f(100.0f, 20.0f, 100.0f);		// Top Right
-	glVertex3f(100.0f, 0.0f, 100.0f);	// Bottom Right
-	glVertex3f(-100.0f, 0.0f, 100.0f);		// Bottom Left
-	glEnd();
-
-	glBegin(GL_QUADS);
-	glNormal3f(-1.0f, 0.0f, 0.0f);
-	glVertex3f(100.0f, 20.0f, -100.0f);				// Top Left
-	glVertex3f(100.0f, 20.0f, 100.0f);		// Top Right
-	glVertex3f(100.0f, 0.0f, 100.0f);	// Bottom Right
-	glVertex3f(100.0f, 0.0f, -100.0f);		// Bottom Left
-	glEnd();
-
-	glBegin(GL_QUADS);
-	glNormal3f(-1.0f, 0.0f, 0.0f);
-	glVertex3f(-100.0f, 20.0f, -100.0f);				// Top Left
-	glVertex3f(-100.0f, 20.0f, 100.0f);		// Top Right
-	glVertex3f(-100.0f, 0.0f, 100.0f);	// Bottom Right
-	glVertex3f(-100.0f, 0.0f, -100.0f);		// Bottom Left
-	glEnd();
-
-
-
-	glEndList();
-}
-
-void initLights(void)
-{
-	// Define a luz ambiente global
-	GLfloat global_ambient[] = { 0.1f, 0.1f, 0.1f, 1.0f };
-	// Define a luz light0. Existem 8 fontes de luz no total.
-	GLfloat light0_ambient[] = { 0.2f, 0.2f, 0.2f, 1.0f };
-	GLfloat light0_diffuse[] = { 0.8f, 0.8f, 0.8f, 1.0f };
-	GLfloat light0_specular[] = { 1.0f, 1.0f, 1.0f, 1.0f };
-	// Define a luz light1. Existem 8 fontes de luz no total.
-	GLfloat light1_ambient[] = { 0.1f, 0.1f, 0.1f, 1.0f };
-	GLfloat light1_diffuse[] = { 1.0f, 1.0f, 1.0f, 1.0f };
-	GLfloat light1_specular[] = { 1.0f, 1.0f, 1.0f, 1.0f };
-	GLfloat spot_angle = 45.0f;
-	GLfloat spot_exp = 12.0f; // Maior valor = maior concentraÃ§Ã£o de luz no centro
-
-	// Fonte de luz ambiente
-	glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
-	glLightModelfv(GL_LIGHT_MODEL_AMBIENT, global_ambient);
-
-	// Fonte de luz posicional
-	glLightfv(GL_LIGHT0, GL_AMBIENT, light0_ambient);
-	glLightfv(GL_LIGHT0, GL_DIFFUSE, light0_diffuse);
-	glLightfv(GL_LIGHT0, GL_SPECULAR, light0_specular);
-	glLightf(GL_LIGHT0, GL_CONSTANT_ATTENUATION, 0.1);
-	glLightf(GL_LIGHT0, GL_LINEAR_ATTENUATION, 0.05);
-	glLightf(GL_LIGHT0, GL_QUADRATIC_ATTENUATION, 0.05);
-
-	// Fonte de luz cÃ³nica
-	glLightfv(GL_LIGHT1, GL_AMBIENT, light1_ambient);
-	glLightfv(GL_LIGHT1, GL_DIFFUSE, light1_diffuse);
-	glLightfv(GL_LIGHT1, GL_SPECULAR, light1_specular);
-	glLightf(GL_LIGHT1, GL_SPOT_CUTOFF, spot_angle);
-	glLightf(GL_LIGHT1, GL_SPOT_EXPONENT, spot_exp);
-
-	// Activa a utilizaÃ§Ã£o de iluminaÃ§Ã£o
-	glEnable(GL_LIGHTING);
-	// Activa a fonte de luz light0
-	glEnable(GL_LIGHT0);
-	// Activa a fonte de luz light1
-	glEnable(GL_LIGHT1);
-}
-
-void applylights(void)
-{
-	// Define a posição de light0
-	GLfloat light0_position[] = { -1.0f, -3.0f, 0.0f, 1.0f };
-	// Define a posição de direcção de light1
-	GLfloat spot_position[] = { 0.0f, 3.0f, -1.0f, 1.0f };
-	GLfloat spot_direction[] = { 0.0f, -1.0f, 0.0f };
-
-	// Aplica a light0
-	glLightfv(GL_LIGHT0, GL_POSITION, light0_position);
-
-	// Aplica a light1
-	glLightfv(GL_LIGHT1, GL_POSITION, spot_position);
-	glLightfv(GL_LIGHT1, GL_SPOT_DIRECTION, spot_direction);
-
-	glDisable(GL_LIGHTING);
-
-	// Desenha uma esfera que sinaliza a posição da light0
-	glPushMatrix();
-	glColor3f(1.0, 1.0, 1.0);
-	glTranslatef(0.0f, 3.0f, 0.0f);
-	glutSolidSphere(0.1, 20, 20);
-	glPopMatrix();
-
-	// Desenha uma esfera que sinaliza a posição da light1
-	glPushMatrix();
-	glColor3f(1.0, 1.0, 1.0);
-	glTranslatef(0.0f, 3.0f, -10.0f);
-	glutSolidSphere(0.1, 20, 20);
-	glPopMatrix();
-
-	glEnable(GL_LIGHTING);
-}
-
-void init(void)
-{
-
-	glEnable(GL_CULL_FACE_MODE);
-	glEnable(GL_DEPTH_TEST);
-	glDepthMask(GL_TRUE);
-
-	// Define tÃ©cnica de shading: GL_FLAT, GL_SMOOTH
-	glShadeModel(GL_SMOOTH);
-
-	glPolygonMode(GL_FRONT, GL_FILL); // GL_LINE, GL_POINT, GL_FILL
-
-	// Compila o modelo
-	floorAndWallsDL();
-}
-
+//Desenha um eixo 3D com um determinado comprimento
 void drawAxes(float length)
 {
 	glPushAttrib(GL_POLYGON_BIT | GL_ENABLE_BIT | GL_COLOR_BUFFER_BIT);
@@ -499,7 +494,55 @@ void drawAxes(float length)
 
 }
 
-void HoughDetection(Mat& src_gray, Mat& src_display)
+//Aredonda por excesso um valor double
+double round(double d)
+{
+	return floor(d + 0.5);
+}
+
+//Renderiza texto num espaço tridimensional, utilizando o metodo glutStrokeCharacter
+void glRenderString(float x, float y, char str[])
+{
+	glDisable(GL_LIGHTING);
+	glColor3f(1.0, 1.0, 1.0);
+
+	glPushMatrix();
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+
+	glTranslatef(-30, 28 - y, (float)-glutStrokeWidth(GLUT_STROKE_MONO_ROMAN, str[0]) / 2);
+
+	glColor3f(1.0f, 1.0f, 1.0f);
+	glScalef(0.012, 0.012, 0.012);
+	for (int i = 0; i < strlen(str); i++)glutStrokeCharacter(GLUT_STROKE_MONO_ROMAN, str[i]);
+
+	glPopMatrix();
+
+	glEnable(GL_LIGHTING);
+}
+
+//Tranforma coordenadas de ecrã em coordenadas do mundo
+float ScreenToWorld(float input, float input_start, float input_end, float output_start, float output_end, float divisor){
+	double slope = 1.0 * (output_end - output_start) / (input_end - input_start);
+	return (output_start + slope * (input - input_start)) / divisor;
+}
+
+//Filtra um material (imagem da camara) por uma determinada cor, configuravel em runtime
+void OrangeFilter(Mat& source, Mat& destination){
+	inRange(source, Scalar(iLowH, iLowS, iLowV), Scalar(iHighH, iHighS, iHighV), destination); //Threshold the image
+
+	//morphological opening (remove small objects from the foreground)
+	erode(destination, destination, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)));
+	dilate(destination, destination, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)));
+
+	//morphological closing (fill small holes in the foreground)
+	dilate(destination, destination, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)));
+	erode(destination, destination, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)));
+
+}
+
+//Detecta um objeto colorido através da utilização dos metodos findContours, approxPolyDP e minEnclosingCircle
+void ObjectDetection(Mat& src_gray, Mat& src_display)
 {
 
 	int largest_area = 0;
@@ -595,53 +638,15 @@ void HoughDetection(Mat& src_gray, Mat& src_display)
 
 	//Flip and show the control window
 	//flip(src_gray, controlFlipped, 0);
-	
+
 
 }
 
-void OrangeFilter(Mat& source, Mat& destination){
-	inRange(source, Scalar(iLowH, iLowS, iLowV), Scalar(iHighH, iHighS, iHighV), destination); //Threshold the image
+#pragma endregion
 
-	//morphological opening (remove small objects from the foreground)
-	erode(destination, destination, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)));
-	dilate(destination, destination, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)));
+#pragma region Callbacks
 
-	//morphological closing (fill small holes in the foreground)
-	dilate(destination, destination, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)));
-	erode(destination, destination, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)));
-
-}
-
-double round(double d)
-{
-	return floor(d + 0.5);
-}
-
-float RangeAToRangeB(float input, float input_start, float input_end, float output_start, float output_end, float divisor){
-	double slope = 1.0 * (output_end - output_start) / (input_end - input_start);
-	return (output_start + slope * (input - input_start)) / divisor;
-}
-
-void glRenderString(float x, float y, char str[])
-{
-	glDisable(GL_LIGHTING);
-	glColor3f(1.0, 1.0, 1.0);
-
-	glPushMatrix();
-	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
-	
-	glTranslatef(-30, 28 - y, (float)-glutStrokeWidth(GLUT_STROKE_MONO_ROMAN, str[0])/2);
-
-	glColor3f(1.0f, 1.0f, 1.0f);
-	glScalef(0.012, 0.012, 0.012);
-	for (int i = 0; i < strlen(str); i++)glutStrokeCharacter(GLUT_STROKE_MONO_ROMAN, str[i]);
-
-	glPopMatrix();
-
-	glEnable(GL_LIGHTING);
-}
-
+//Lógica de deteção de objetos / face / marcadores e renderização de cada um dos modos
 void display()
 {
 	// clear the window
@@ -892,7 +897,7 @@ void display()
 		accumulatorZ = (newValuesWeight * scale) + (1.0 - newValuesWeight) * accumulatorZ;
 
 		//Dar a escala correcta Ã  textura aplicada
-		
+
 		glScalef(accumulatorZ, accumulatorZ, 0);
 
 		//Escrever valores
@@ -913,14 +918,14 @@ void display()
 
 		//Desenhar a textura num quad
 		glBegin(GL_QUADS);
-			glTexCoord2f(0.0f, 0.0f);
-			glVertex3f(-1.0f, -1.0f, 0.0f);
-			glTexCoord2f(1.0f, 0.0f); // sempre 1.0f se quiser aplicar toda a textura
-			glVertex3f(1.0f, -1.0f, 0.0f);
-			glTexCoord2f(1.0f, 1.0f);
-			glVertex3f(1.0f, 1.0f, 0.0f);
-			glTexCoord2f(0.0f, 1.0f);
-			glVertex3f(-1.0f, 1.0f, 0.0f);
+		glTexCoord2f(0.0f, 0.0f);
+		glVertex3f(-1.0f, -1.0f, 0.0f);
+		glTexCoord2f(1.0f, 0.0f); // sempre 1.0f se quiser aplicar toda a textura
+		glVertex3f(1.0f, -1.0f, 0.0f);
+		glTexCoord2f(1.0f, 1.0f);
+		glVertex3f(1.0f, 1.0f, 0.0f);
+		glTexCoord2f(0.0f, 1.0f);
+		glVertex3f(-1.0f, 1.0f, 0.0f);
 		glEnd();
 		glPopMatrix();
 
@@ -950,7 +955,7 @@ void display()
 		//Detetar marcadores
 		MDetector.detect(undistorted, Markers, CamParam, 0.045);
 		//Desenhar imagem da camara
-		
+
 		putText(undistorted, "Modo 4 - Marker Detection", cvPoint(10, height - 20), CV_FONT_HERSHEY_SIMPLEX, 0.5, Scalar(255, 255, 255), 1, 8, true);
 		putText(undistorted, "Tecla N para alterar o modelo 3D", cvPoint(10, height - 40), CV_FONT_HERSHEY_SIMPLEX, 0.5, Scalar(255, 255, 255), 1, 8, true);
 		putText(undistorted, "Tecla M para passar ao proximo modo", cvPoint(10, height - 60), CV_FONT_HERSHEY_SIMPLEX, 0.5, Scalar(255, 255, 255), 1, 8, true);
@@ -1006,12 +1011,14 @@ void display()
 	glutPostRedisplay();
 }
 
+//Callback de reshape da janela glut
 void reshape(int w, int h)
 {
 	// set OpenGL viewport (drawable area)
 	glViewport(0, 0, width, height);
 }
 
+//Callback de processamento do rato
 void mouse(int button, int state, int x, int y)
 {
 	if (button == GLUT_LEFT_BUTTON && state == GLUT_UP)
@@ -1020,6 +1027,7 @@ void mouse(int button, int state, int x, int y)
 	}
 }
 
+//Callback de processamento do teclado
 void keyboard(unsigned char key, int x, int y)
 {
 	switch (key)
@@ -1028,7 +1036,7 @@ void keyboard(unsigned char key, int x, int y)
 		// quit when q is pressed
 		exit(0);
 		break;
-	case 'm' :
+	case 'm':
 		demoMode += 1;
 		if (demoMode >= demoModes){
 			demoMode = 0;
@@ -1051,12 +1059,13 @@ void keyboard(unsigned char key, int x, int y)
 			}
 		}
 		break;
-		
+
 	default:
 		break;
 	}
 }
 
+//Leitura de um novo frame a partir da camara
 void idle()
 {
 	// grab a frame from the camera
@@ -1068,9 +1077,14 @@ void idle()
 	}
 
 	CamParam.resize(frameOriginal.size());
-	
+
 }
 
+#pragma endregion
+
+#pragma endregion
+
+#pragma region Entry Point
 int main(int argc, char** argv)
 {
 	if (!cap.isOpened())  // if not success, exit program
@@ -1142,3 +1156,4 @@ int main(int argc, char** argv)
 
 	return 0;
 }
+#pragma endregion
