@@ -529,8 +529,8 @@ float ScreenToWorld(float input, float input_start, float input_end, float outpu
 	return (output_start + slope * (input - input_start)) / divisor;
 }
 
-//Filtra um material (imagem da camara) por uma determinada cor, configuravel em runtime
-void OrangeFilter(Mat& source, Mat& destination){
+//Filtra um imagem da camara por uma determinada cor, configuravel em runtime
+void ColorFilter(Mat& source, Mat& destination){
 	inRange(source, Scalar(iLowH, iLowS, iLowV), Scalar(iHighH, iHighS, iHighV), destination); //Threshold the image
 
 	//morphological opening (remove small objects from the foreground)
@@ -662,7 +662,7 @@ void display()
 			cvtColor(frameOriginal, frameHSV, COLOR_BGR2HSV); //Convert the captured frame from BGR to HSV
 
 			//Filtrar para deixar apenas coisas avermelhadas
-			OrangeFilter(frameHSV, frameFiltered);
+			ColorFilter(frameHSV, frameFiltered);
 
 			//Retirar o background
 			pMOG->operator()(frameFiltered, fgMaskMOG);
