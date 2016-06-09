@@ -711,9 +711,11 @@ void display()
 			ScreenToWorld((float)circleCenter.y, 0.0, (float)height, -height / 2.0, height / 2.0, 50.0),
 			zoomRange);
 
-
+		glPushMatrix();
 		// Desenhar o chão
+		glTranslatef(0.0, -5.0, 0.0);
 		glCallList(myDL);
+		glPopMatrix();
 
 		// Desenhar um eixo 3D no centro do mundo
 		drawAxes(1.0);
