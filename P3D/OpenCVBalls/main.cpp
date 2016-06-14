@@ -1069,11 +1069,13 @@ void keyboard(unsigned char key, int x, int y)
 //Leitura de um novo frame a partir da camara
 void idle()
 {
-	// grab a frame from the camera
+	//recolher um novo frame da camara
 	if (demoMode == 2){
+		//deteção de faces
 		detector >> frameOriginal;
 	}
 	else{
+		//outros modos
 		frameCapturedSuccessfully = cap.read(frameOriginal);
 	}
 
@@ -1088,34 +1090,33 @@ void idle()
 #pragma region Entry Point
 int main(int argc, char** argv)
 {
-	if (!cap.isOpened())  // if not success, exit program
+	if (!cap.isOpened())
 	{
 		cout << "Cannot open the web cam" << endl;
 		return -1;
 	}
 
-	pMOG = new BackgroundSubtractorMOG(); //MOG approach
+	pMOG = new BackgroundSubtractorMOG();
 
-	namedWindow("Control", CV_WINDOW_AUTOSIZE); //create a window called "Control"
+	//Criar a janela "Controlo"
+	namedWindow("Control", CV_WINDOW_AUTOSIZE);
 
-	//Create trackbars in "Control" window
+	//Criar os sliders para controlo do filtro de cor
 	cvCreateTrackbar("LowH", "Control", &iLowH, 179); //Hue (0 - 179)
 	cvCreateTrackbar("HighH", "Control", &iHighH, 179);
-
 	cvCreateTrackbar("LowS", "Control", &iLowS, 255); //Saturation (0 - 255)
 	cvCreateTrackbar("HighS", "Control", &iHighS, 255);
-
 	cvCreateTrackbar("LowV", "Control", &iLowV, 255); //Value (0 - 255)
 	cvCreateTrackbar("HighV", "Control", &iHighV, 255);
 
-	// initialize GLUT
+	//Inicializar Glut
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_DEPTH | GLUT_RGBA);
 	glutInitWindowPosition(0, 0);
 	glutInitWindowSize(width, height);
 	glutCreateWindow("OpenGL / OpenCV Example");
 
-	// InicializaÃ§Ãµes
+	// Inicializações
 	init();
 	initLights();
 	//Texturas para o planeta e lua
@@ -1137,7 +1138,7 @@ int main(int argc, char** argv)
 	loadmodel(5, "rose+vase", 0.05);
 	loadmodel(6, "soccerball", 0.03);
 
-	//Read camera calibration files
+	//Ler ficheiro de calibração da camara
 	try{
 		CamParam.readFromXMLFile("camera.xml");
 	}
@@ -1145,14 +1146,14 @@ int main(int argc, char** argv)
 		cout << "Exception: " << ex.what() << endl;
 	}
 	
-	// set up GUI callback functions
+	//Callback's do Glut
 	glutDisplayFunc(display);
 	glutReshapeFunc(reshape);
 	glutMouseFunc(mouse);
 	glutKeyboardFunc(keyboard);
 	glutIdleFunc(idle);
 
-	// start GUI loop
+	//Iniciar o main loop
 	glutMainLoop();
 
 	return 0;
